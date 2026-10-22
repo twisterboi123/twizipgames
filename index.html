@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Twizip Games</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Twizip Games makes VR games for Meta Quest and games and tools for PC.">
+<link rel="icon" href="monitorglow/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a studio shelf. A loud wordmark up top, then each project as a full-width row that carries its own color. */
+  :root {
+    --bg: #0D0C0B;
+    --surface: #171513;
+    --line: #2B2723;
+    --fg: #F3EEE6;
+    --muted: #A39B8F;
+    --spark: #FFB23E;
+    --wordmark: "Unbounded", "Arial Black", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 6px; }
+  .wrap {
+    width: 100%; max-width: 1160px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  header .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 22px; font: 500 13px/1 var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  header a { text-decoration: none; }
+  header a:hover { color: var(--fg); }
+
+  .intro { padding-block: 48px 64px; }
+  .wordmark {
+    margin: 0;
+    font: 900 clamp(54px, 13vw, 168px)/0.86 var(--wordmark);
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+  }
+  .wordmark span { display: block; }
+  .wordmark .games { color: transparent; -webkit-text-stroke: 2px var(--fg); }
+  .wordmark .dot { color: var(--spark); -webkit-text-stroke: 0; }
+  .tagline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 40px; margin-top: 36px; align-items: end; }
+  .tagline p { margin: 0; font-size: clamp(18px, 2.2vw, 22px); max-width: 40ch; color: var(--muted); }
+  .tagline p strong { color: var(--fg); font-weight: 500; }
+  .count { font: 400 13px/1.5 var(--mono); color: var(--muted); }
+
+  .shelf-head { display: flex; justify-content: space-between; gap: 16px; padding-block: 0 14px; border-bottom: 1px solid var(--line); font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+  .project {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(20px, 4vw, 56px); align-items: center;
+    padding-block: 40px; border-bottom: 1px solid var(--line); text-decoration: none;
+  }
+  .project h2 { margin: 0 0 10px; font: 800 clamp(30px, 4.6vw, 52px)/1 var(--wordmark); letter-spacing: -0.03em; }
+  .project p { margin: 0 0 18px; color: var(--muted); max-width: 46ch; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .facts span { font: 400 12.5px/1 var(--mono); padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg); }
+  .open { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; border-bottom: 2px solid var(--glow, var(--spark)); padding-bottom: 3px; }
+  .project:hover .open span { transform: translateX(4px); }
+  .open span { transition: transform .15s; }
+
+  /* Monitor Glow's own color, shown as a lit screen */
+  .glow-art { --glow: #FF3EA5; position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 18px; background: #08070C; border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; }
+  .glow-art .scr {
+    width: 66%; aspect-ratio: 21 / 9; border-radius: 8px; border: 6px solid #15131B;
+    background: linear-gradient(135deg, #FF3EA5, #8A3FFC 50%, #2DE2FF);
+    box-shadow: 0 0 70px -4px #FF3EA5, 0 0 160px -20px #8A3FFC;
+    animation: hue 14s linear infinite;
+  }
+  .glow-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: radial-gradient(ellipse 50% 100% at 50% 0%, rgba(255, 62, 165, .35), transparent 70%); }
+  @keyframes hue { to { filter: hue-rotate(360deg); } }
+
+  .next { padding-block: 40px 72px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+  .next strong { color: var(--fg); font-weight: 500; }
+
+  footer .wrap { border-top: 1px solid var(--line); padding-block: 28px 44px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 760px) {
+    .project { grid-template-columns: minmax(0, 1fr); }
+    .glow-art { order: -1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .glow-art .scr { animation: none; }
+    .open span { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span>Indie studio · Belgium</span>
+    <a href="#projects">Projects</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap intro">
+    <h1 class="wordmark"><span>Twizip</span><span class="games">Games<span class="dot">.</span></span></h1>
+    <div class="tagline">
+      <p><strong>VR games for Meta Quest,</strong> and games and tools for PC.</p>
+      <span class="count">Meta Quest · PC</span>
+    </div>
+  </div>
+
+  <section id="projects" class="wrap">
+    <div class="shelf-head"><span>Projects</span><span>Platform</span></div>
+
+    <a class="project" href="monitorglow/" style="--glow:#FF3EA5">
+      <div>
+        <h2>Monitor Glow</h2>
+        <p>Turns your monitors into soft, colored lighting for video calls, streams and late nights. Twelve scenes, six effects and a ring light mode.</p>
+        <div class="facts"><span>PC tool</span><span>Free</span><span>v1.0.0</span><span>Windows 10 &amp; 11</span></div>
+        <span class="open">See Monitor Glow <span aria-hidden="true">→</span></span>
+      </div>
+      <div class="glow-art" aria-hidden="true"><div class="scr"></div></div>
+    </a>
+
+    <!-- Add a VR game: copy the <a class="project"> block above, change the text, link and colors. -->
+
+    <div class="next">
+      <span><strong>VR games for Meta Quest</strong> · coming to this page</span>
+      <span>New releases show up here first.</span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Twizip Games</span>
+    <span>twizipgames.xyz</span>
+  </div>
+</footer>
+
+</body>
+</html>

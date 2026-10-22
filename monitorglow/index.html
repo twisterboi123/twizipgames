@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monitor Glow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Turn your monitors into soft, colored lighting for video calls, streams and late nights. Free for Windows.">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a dark room lit only by the product. The live demo is the hero; everything else stays quiet so the glow carries the page. */
+  :root {
+    --bg: #0B0A10;
+    --surface: #14121C;
+    --surface-2: #1C1927;
+    --line: #2A2636;
+    --fg: #EEEAF6;
+    --muted: #9C96AE;
+    --accent: #FF3EA5;
+    --glow: #FF3EA5;
+    --glow2: #2DE2FF;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 400 16px/1.6 var(--body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  body::after {
+    /* ambient spill of the current glow color across the room */
+    content: "";
+    position: fixed;
+    inset: -20% -10% auto;
+    height: 90vh;
+    background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--glow) 16%, transparent), transparent 65%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 6px; }
+
+  .wrap {
+    width: 100%;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  /* header */
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; }
+  .brand { display: flex; align-items: center; gap: 12px; font: 700 19px/1 var(--display); text-decoration: none; }
+  .brand img { width: 32px; height: 32px; }
+  nav { display: flex; gap: 22px; font-size: 15px; color: var(--muted); }
+  nav a { text-decoration: none; }
+  nav a:hover { color: var(--fg); }
+
+  /* hero */
+  .hero { padding-block: 40px 24px; display: grid; gap: 40px; }
+  .hero h1 {
+    font: 800 clamp(40px, 7vw, 84px)/0.98 var(--display);
+    letter-spacing: -0.03em;
+    margin: 0;
+    max-width: 14ch;
+    text-wrap: balance;
+  }
+  .hero h1 em { font-style: normal; color: var(--glow); text-shadow: 0 0 40px color-mix(in srgb, var(--glow) 60%, transparent); transition: color .4s; }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 52ch; margin: 18px 0 0; }
+  .hero-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: end; }
+  .cta-col { display: grid; gap: 14px; justify-items: start; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 15px 22px; border-radius: 12px;
+    font: 600 16px/1 var(--body); text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+    transition: transform .15s, border-color .15s, box-shadow .2s;
+  }
+  .btn:hover { transform: translateY(-1px); border-color: var(--muted); }
+  .btn.primary {
+    background: var(--fg); color: var(--bg); border-color: var(--fg);
+    box-shadow: 0 0 0 1px var(--fg), 0 10px 40px -8px color-mix(in srgb, var(--glow) 70%, transparent);
+  }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .meta { font: 400 13px/1.5 var(--mono); color: var(--muted); }
+
+  /* demo stage */
+  .stage {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: linear-gradient(to bottom, #0E0C14, #08070C);
+    padding: clamp(18px, 4vw, 48px) clamp(14px, 4vw, 48px) 0;
+    overflow: hidden;
+  }
+  .monitors { display: flex; gap: clamp(10px, 2.5vw, 28px); align-items: flex-end; justify-content: center; position: relative; z-index: 1; }
+  .monitor { display: grid; justify-items: center; min-width: 0; }
+  .monitor.wide { flex: 2.15 1 0; }
+  .monitor.std { flex: 1.25 1 0; }
+  .screen {
+    width: 100%;
+    border: clamp(4px, .7vw, 8px) solid #15131B;
+    border-radius: 10px;
+    background: var(--screen, var(--glow));
+    box-shadow: 0 0 60px -6px var(--glow), 0 0 140px -20px var(--glow);
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow .3s;
+  }
+  .wide .screen { aspect-ratio: 21 / 9; }
+  .std .screen { aspect-ratio: 16 / 9; }
+  .stand { width: 14%; height: clamp(14px, 2.5vw, 30px); background: #1A1822; }
+  .foot { width: 42%; height: 6px; border-radius: 4px 4px 0 0; background: #23202D; }
+
+  /* ring-light mode: the call shows through, the edge glows */
+  .call { position: absolute; inset: 0; display: none; padding: 7%; gap: 4%; background: #101016; }
+  .ring .call { display: grid; grid-template-columns: 1fr 1fr; }
+  .ring .std .call { grid-template-columns: 1fr; padding: 9%; }
+  .ring .screen { box-shadow: inset 0 0 0 clamp(5px, 1.1vw, 12px) var(--glow), 0 0 60px -6px var(--glow), 0 0 140px -20px var(--glow); }
+  .ring .call { margin: clamp(5px, 1.1vw, 12px); border-radius: 3px; }
+  .tile { border-radius: 6px; background: #1C1B24; position: relative; overflow: hidden; }
+  .tile::after {
+    content: ""; position: absolute; left: 50%; bottom: -18%; width: 46%; aspect-ratio: 1; transform: translateX(-50%);
+    border-radius: 50% 50% 0 0; background: #2A2834;
+    box-shadow: 0 -38% 0 -24% #2A2834;
+  }
+  .tile.you::after { background: color-mix(in srgb, var(--glow) 35%, #2A2834); box-shadow: 0 -38% 0 -24% color-mix(in srgb, var(--glow) 35%, #2A2834); }
+
+  .desk {
+    height: clamp(40px, 7vw, 80px);
+    margin: 0 calc(-1 * clamp(14px, 4vw, 48px));
+    background:
+      radial-gradient(ellipse 60% 120% at 50% 0%, color-mix(in srgb, var(--glow) 38%, transparent), transparent 70%),
+      linear-gradient(#17151F, #0D0C12);
+    border-top: 1px solid #24212E;
+  }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between;
+    padding: 18px clamp(14px, 3vw, 24px);
+    border: 1px solid var(--line); border-top: 0;
+    border-radius: 0 0 24px 24px;
+    background: var(--surface);
+    margin-top: -1px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--fg);
+    font: 500 14px/1 var(--body); cursor: pointer;
+  }
+  .chip i { width: 12px; height: 12px; border-radius: 50%; background: var(--sw); flex: none; }
+  .chip[aria-pressed="true"] { border-color: var(--fg); }
+  .chip:hover { border-color: var(--muted); }
+  .readout { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; font: 400 13px/1.4 var(--mono); color: var(--muted); }
+  .readout b { color: var(--fg); font-weight: 500; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; color: var(--muted); font: 500 13px/1 var(--body); padding: 8px 12px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); }
+  .bright { display: inline-flex; align-items: center; gap: 8px; }
+  .bright input { width: 110px; accent-color: var(--fg); }
+
+  /* sections */
+  section { padding-block: 72px; }
+  .eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  h2 { font: 700 clamp(30px, 4.4vw, 48px)/1.05 var(--display); letter-spacing: -0.02em; margin: 0 0 14px; max-width: 20ch; text-wrap: balance; }
+  .section-lede { color: var(--muted); max-width: 58ch; margin: 0 0 40px; font-size: 18px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .feature { background: var(--bg); padding: 28px 26px 30px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+  .feature h3 { font: 700 21px/1.2 var(--display); margin: 0; }
+  .feature p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .swatches { display: flex; gap: 6px; margin-bottom: 6px; }
+  .swatches span { width: 22px; height: 22px; border-radius: 6px; background: var(--c); }
+  .tag { font: 400 12.5px/1.5 var(--mono); color: var(--fg); opacity: .8; }
+
+  .keys { display: grid; gap: 2px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .keyrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 18px 24px; background: var(--surface); }
+  .combo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  kbd {
+    font: 500 14px/1 var(--mono); color: var(--fg);
+    padding: 8px 11px; min-width: 38px; text-align: center;
+    border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 8px; background: var(--surface-2);
+  }
+  .plus { color: var(--muted); font-size: 13px; }
+  .keyrow span.what { color: var(--muted); }
+
+  .download {
+    border: 1px solid var(--line); border-radius: 24px; padding: clamp(28px, 5vw, 56px);
+    background:
+      radial-gradient(ellipse 70% 90% at 100% 0%, color-mix(in srgb, var(--glow) 20%, transparent), transparent 70%),
+      var(--surface);
+    display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px; align-items: start;
+  }
+  .download .cta-col { margin-top: 8px; }
+  .note { border-left: 2px solid var(--line); padding-left: 18px; color: var(--muted); font-size: 15px; display: grid; gap: 10px; }
+  .note strong { color: var(--fg); font-weight: 600; }
+  .note ol { margin: 0; padding-left: 20px; }
+
+  .faq { display: grid; gap: 0; border-top: 1px solid var(--line); }
+  details { border-bottom: 1px solid var(--line); padding-block: 4px; }
+  summary { cursor: pointer; list-style: none; padding: 18px 0; font: 600 18px/1.3 var(--body); display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font: 400 22px/1 var(--mono); color: var(--muted); }
+  details[open] summary::after { content: "−"; }
+  details p { margin: 0 0 20px; color: var(--muted); max-width: 64ch; }
+
+  footer .wrap { padding-block: 36px 48px; display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 860px) {
+    .hero-top, .download { grid-template-columns: minmax(0, 1fr); }
+    .features { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
+  @media (max-width: 560px) {
+    nav { display: none; }
+    .features { grid-template-columns: minmax(0, 1fr); }
+    .monitor.std { display: none; }
+    .controls { flex-direction: column; align-items: stretch; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .btn, .hero h1 em, .screen { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="icon.png" width="32" height="32" alt="">Monitor Glow</a>
+    <nav aria-label="Main">
+      <a href="/">Twizip Games</a>
+      <a href="#features">Features</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#faq">FAQ</a>
+      <a href="#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div class="hero-top">
+      <div>
+        <h1>Your monitors are the best <em>light</em> in the room.</h1>
+        <p class="lede">Monitor Glow turns your screens into soft, colored lighting for video calls, streams and late nights. Pick a scene, press a shortcut, look great on camera.</p>
+      </div>
+      <div class="cta-col">
+        <a class="btn primary" href="https://github.com/twisterboi123/twizipgames/releases/download/monitorglow-v1.0.0/MonitorGlow-Setup.exe">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+          Download for Windows
+        </a>
+        <a class="btn" href="https://apps.microsoft.com/search?query=Monitor%20Glow">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z"/></svg>
+          Get it from Microsoft Store
+        </a>
+        <p class="meta">Free · v1.0.0 · Windows 10 &amp; 11 · 67 MB</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="stage" id="stage" aria-label="Live preview of Monitor Glow">
+        <div class="monitors">
+          <div class="monitor wide">
+            <div class="screen"><div class="call"><div class="tile"></div><div class="tile you"></div></div></div>
+            <div class="stand"></div><div class="foot"></div>
+          </div>
+          <div class="monitor std">
+            <div class="screen" data-offset="1"><div class="call"><div class="tile you"></div></div></div>
+            <div class="stand"></div><div class="foot"></div>
+          </div>
+        </div>
+        <div class="desk"></div>
+      </div>
+      <div class="controls">
+        <div class="chips" id="chips" role="group" aria-label="Scenes"></div>
+        <div class="readout">
+          <div class="seg" role="group" aria-label="Display style">
+            <button type="button" id="mode-full" aria-pressed="true">Fullscreen</button>
+            <button type="button" id="mode-ring" aria-pressed="false">Ring light</button>
+          </div>
+          <label class="bright" for="brightness">Brightness <input type="range" id="brightness" min="20" max="100" value="100"></label>
+          <span id="hex"><b>#FF3EA5</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow">What it does</p>
+      <h2>Lighting you design, not a color picker.</h2>
+      <p class="section-lede">Everything a ring light or LED strip does, using the screens already on your desk.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="swatches"><span style="--c:#FFF1E0"></span><span style="--c:#FF8A2A"></span><span style="--c:linear-gradient(135deg,#FF3EA5,#2DE2FF)"></span><span style="--c:#8A2BE2"></span><span style="--c:#FF9A3C"></span></div>
+          <h3>12 scenes, plus yours</h3>
+          <p>Studio White, Golden Hour, Vaporwave, Cyberpunk, Candlelight and more. Save any look as your own scene.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">solid · breathing · rainbow · palette fade · gradient · candle</span>
+          <h3>Six living effects</h3>
+          <p>A slow breathing pulse, a drifting palette, a rotating gradient or a warm candle flicker. Speed and depth are adjustable.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">frame: 10 – 400 px · click-through</span>
+          <h3>Ring light mode</h3>
+          <p>A glowing frame around the edge of the screen. Your call stays visible and clickable in the middle.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">1900 K → 10 000 K</span>
+          <h3>Real white light</h3>
+          <p>Dial in a color temperature from candle-warm to daylight-cool for natural skin tones on camera.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">per-monitor on/off · offset effects</span>
+          <h3>Every monitor</h3>
+          <p>Light one screen or all of them. Offset the effect per monitor so a rainbow sweeps across your desk.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">tray · start with Windows</span>
+          <h3>Stays out of the way</h3>
+          <p>Lives in the system tray, starts with Windows if you want, and remembers your settings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="shortcuts">
+    <div class="wrap">
+      <p class="eyebrow">Global shortcuts</p>
+      <h2>Light on mid-call, without leaving the call.</h2>
+      <p class="section-lede">Shortcuts work from any app. You can change the on/off shortcut in Settings.</p>
+      <div class="keys">
+        <div class="keyrow"><div class="combo"><kbd>Ctrl</kbd><span class="plus">+</span><kbd>Alt</kbd><span class="plus">+</span><kbd>L</kbd></div><span class="what">Turn the glow on or off</span></div>
+        <div class="keyrow"><div class="combo"><kbd>Ctrl</kbd><span class="plus">+</span><kbd>Alt</kbd><span class="plus">+</span><kbd>←</kbd><kbd>→</kbd></div><span class="what">Previous / next scene</span></div>
+        <div class="keyrow"><div class="combo"><kbd>Ctrl</kbd><span class="plus">+</span><kbd>Alt</kbd><span class="plus">+</span><kbd>↑</kbd><kbd>↓</kbd></div><span class="what">Brighter / dimmer</span></div>
+        <div class="keyrow"><div class="combo"><kbd>Ctrl</kbd><span class="plus">+</span><kbd>Alt</kbd><span class="plus">+</span><kbd>M</kbd></div><span class="what">Open the control window</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap">
+      <div class="download">
+        <div>
+          <p class="eyebrow">Download</p>
+          <h2>Free. No account, no ads.</h2>
+          <p class="section-lede" style="margin-bottom:0">Windows 10 (version 1809 or newer) and Windows 11, 64-bit.</p>
+          <div class="cta-col">
+            <a class="btn primary" href="https://github.com/twisterboi123/twizipgames/releases/download/monitorglow-v1.0.0/MonitorGlow-Setup.exe">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+              Download installer (.exe)
+            </a>
+            <a class="btn" href="https://apps.microsoft.com/search?query=Monitor%20Glow">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z"/></svg>
+              Microsoft Store
+            </a>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Seeing "Windows protected your PC"?</strong>
+          <span>Monitor Glow is new, so Windows SmartScreen doesn't recognize it yet. The installer is safe to run:</span>
+          <ol>
+            <li>Click <strong>More info</strong>.</li>
+            <li>Click <strong>Run anyway</strong>.</li>
+          </ol>
+          <span>Prefer no warning at all? Install from the Microsoft Store instead.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <p class="eyebrow">FAQ</p>
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Does it work with Zoom, Teams, Discord and OBS?</summary>
+          <p>Yes. Monitor Glow doesn't touch your camera or your call app. It only lights your screens, so it works with any app. Use Ring light mode if you need to see the call while the glow is on.</p>
+        </details>
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. No trial, no account, no ads, and it doesn't collect any data.</p>
+        </details>
+        <details>
+          <summary>Will it be too bright?</summary>
+          <p>You set the brightness from 5% to 100%, and Ctrl + Alt + ↑ / ↓ adjusts it on the fly. Warm white at around 40% is a good start for evening calls.</p>
+        </details>
+        <details>
+          <summary>How do I turn it off when the whole screen is lit?</summary>
+          <p>Press Ctrl + Alt + L, press Esc, or double-click the glow to bring back the control window.</p>
+        </details>
+        <details>
+          <summary>How do I uninstall it?</summary>
+          <p>Open Windows Settings → Apps → Installed apps, find Monitor Glow and choose Uninstall. Your settings are removed too.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Monitor Glow · made for people who are on camera a lot</span>
+    <span>© 2026 <a href="/">Twizip Games</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const scenes = [
+    { name: "Vaporwave", kind: "gradient", a: "#FF3EA5", b: "#2DE2FF" },
+    { name: "Studio White", kind: "solid", a: "#FFF1E0", note: "5600 K" },
+    { name: "Golden Hour", kind: "breathe", a: "#FF8A2A" },
+    { name: "Cyberpunk", kind: "fade", list: ["#FF00A0", "#00F0FF", "#7A00FF"] },
+    { name: "Candlelight", kind: "candle", a: "#FF9A3C" },
+    { name: "Rainbow", kind: "rainbow" },
+  ];
+  const root = document.documentElement;
+  const stage = document.getElementById("stage");
+  const screens = [...stage.querySelectorAll(".screen")];
+  const chips = document.getElementById("chips");
+  const hex = document.getElementById("hex");
+  const bright = document.getElementById("brightness");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let current = scenes[0];
+  let candle = [1, 1], target = [1, 1];
+
+  const toRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const toHex = c => "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("").toUpperCase();
+  const scale = (h, k) => toHex(toRgb(h).map(v => v * k));
+  const lerp = (a, b, t) => toHex(toRgb(a).map((v, i) => v + (toRgb(b)[i] - v) * t));
+  const hsv = h => {
+    const f = n => { const k = (n + h / 60) % 6; return 255 * (1 - Math.max(0, Math.min(k, 4 - k, 1)) * 0.92); };
+    return toHex([f(5), f(3), f(1)]);
+  };
+
+  scenes.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    const sw = s.kind === "gradient" ? `linear-gradient(135deg, ${s.a}, ${s.b})`
+      : s.kind === "fade" ? `linear-gradient(135deg, ${s.list.join(",")})`
+      : s.kind === "rainbow" ? "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" : s.a;
+    b.innerHTML = `<i style="--sw:${sw}"></i>${s.name}`;
+    b.addEventListener("click", () => {
+      current = s;
+      chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+      if (reduced) frame(0);
+    });
+    chips.appendChild(b);
+  });
+
+  const setMode = ring => {
+    stage.classList.toggle("ring", ring);
+    document.getElementById("mode-full").setAttribute("aria-pressed", String(!ring));
+    document.getElementById("mode-ring").setAttribute("aria-pressed", String(ring));
+  };
+  document.getElementById("mode-full").addEventListener("click", () => setMode(false));
+  document.getElementById("mode-ring").addEventListener("click", () => setMode(true));
+  bright.addEventListener("input", () => { if (reduced) frame(0); });
+
+  function colorAt(t, i) {
+    const s = current;
+    switch (s.kind) {
+      case "breathe": return scale(s.a, 1 - 0.35 * (0.5 - 0.5 * Math.cos(t * 1.1)));
+      case "fade": {
+        const p = t * 0.35 + i * 0.6, n = s.list.length, k = Math.floor(p), f = p - k;
+        return lerp(s.list[k % n], s.list[(k + 1) % n], f * f * (3 - 2 * f));
+      }
+      case "candle": return scale(s.a, candle[i]);
+      case "rainbow": return hsv((t * 40 + i * 120) % 360);
+      case "gradient": return s.a;
+      default: return s.a;
+    }
+  }
+
+  function frame(ms) {
+    const t = ms / 1000;
+    const k = bright.value / 100;
+    for (let i = 0; i < 2; i++) {
+      if (Math.random() < 0.12) target[i] = 0.7 + Math.random() * 0.3;
+      candle[i] += (target[i] - candle[i]) * 0.2;
+    }
+    screens.forEach((el, i) => {
+      const c = scale(colorAt(t, i), k);
+      if (current.kind === "gradient") {
+        const angle = 135 + i * 90 + (reduced ? 0 : t * 12);
+        el.style.setProperty("--screen", `linear-gradient(${angle}deg, ${scale(current.a, k)}, ${scale(current.b, k)})`);
+      } else {
+        el.style.setProperty("--screen", c);
+      }
+      el.style.setProperty("--glow", c);
+    });
+    const main = scale(colorAt(t, 0), k);
+    root.style.setProperty("--glow", main);
+    const label = current.kind === "gradient" ? `${scale(current.a, k)} → ${scale(current.b, k)}` : main;
+    hex.innerHTML = `<b>${label}</b>${current.note ? " · " + current.note : ""}`;
+    if (!reduced) requestAnimationFrame(frame);
+  }
+  frame(0);
+  if (!reduced) requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
