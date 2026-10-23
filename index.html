@@ -78,6 +78,20 @@
   .glow-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: radial-gradient(ellipse 50% 100% at 50% 0%, rgba(255, 62, 165, .35), transparent 70%); }
   @keyframes hue { to { filter: hue-rotate(360deg); } }
 
+  /* Teaser for the next project: blurred blocks, nothing readable yet */
+  .project.soon { cursor: default; }
+  .soon-tag { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--spark); margin-bottom: 14px; }
+  .soon-tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--spark); animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .soon-art { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; background: #0B0A0F; border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
+  .soon-art .blocks { display: grid; gap: 10px; width: 62%; filter: blur(7px); opacity: .85; }
+  .soon-art .blocks i { display: block; height: 34px; border-radius: 8px; }
+  .soon-art .blocks i:nth-child(1) { width: 70%; background: #FFB23E; }
+  .soon-art .blocks i:nth-child(2) { width: 85%; margin-left: 12%; background: #5865F2; }
+  .soon-art .blocks i:nth-child(3) { width: 60%; margin-left: 12%; background: #3DDC97; }
+  .soon-art .blocks i:nth-child(4) { width: 45%; background: #FF3EA5; }
+  .soon-art .q { position: absolute; font: 900 clamp(48px, 8vw, 88px)/1 var(--wordmark); color: var(--fg); }
+
   .next { padding-block: 40px 72px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
   .next strong { color: var(--fg); font-weight: 500; }
 
@@ -85,10 +99,10 @@
 
   @media (max-width: 760px) {
     .project { grid-template-columns: minmax(0, 1fr); }
-    .glow-art { order: -1; }
+    .glow-art, .soon-art { order: -1; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .glow-art .scr { animation: none; }
+    .glow-art .scr, .soon-tag::before { animation: none; }
     .open span { transition: none; }
   }
 </style>
@@ -123,6 +137,19 @@
       </div>
       <div class="glow-art" aria-hidden="true"><div class="scr"></div></div>
     </a>
+
+    <div class="project soon">
+      <div>
+        <span class="soon-tag">In the works</span>
+        <h2>Something new</h2>
+        <p>Working on a brand new project right now. Can't say much yet, but it's a big one. Sneak peeks soon 👀</p>
+        <div class="facts"><span>PC</span><span>Free</span><span>Coming soon</span></div>
+      </div>
+      <div class="soon-art" aria-hidden="true">
+        <div class="blocks"><i></i><i></i><i></i><i></i></div>
+        <span class="q">?</span>
+      </div>
+    </div>
 
     <!-- Add a VR game: copy the <a class="project"> block above, change the text, link and colors. -->
 
